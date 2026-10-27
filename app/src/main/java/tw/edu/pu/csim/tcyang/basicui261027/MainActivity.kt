@@ -13,12 +13,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +48,14 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
+                // 需要三張圖時直接呼叫並傳入清單
+                ThreeRowExample(
+                    imageResIds = listOf(
+                        R.drawable.animal1,
+                        R.drawable.animal2,
+                        R.drawable.animal0
+                    )
+                )
             }
         }
     }
@@ -104,6 +114,7 @@ fun ColumnExample(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(8.dp))
         RowExample()
+        TextFieldExample()
 
 
     }
@@ -132,3 +143,72 @@ fun RowExample() {
     }
 }
 
+@Composable
+fun TextFieldExample(modifier: Modifier = Modifier) {
+    // 管理輸入框的文字狀態
+    var inputText by remember { mutableStateOf("") }
+
+    Column(
+        modifier = modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Bottom
+    ) {
+        OutlinedTextField(
+            value = inputText,
+            onValueChange = { inputText = it },
+            label = { Text("請輸入文字") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(0.8f)
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = if (inputText.isBlank()) "尚未輸入內容" else "您輸入的是：$inputText"
+        )
+    }
+}
+
+@Composable
+fun ThreeRowExample(imageResIds: List<Int>) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center // 將內部的 Row 放在正中央
+    ){
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // 第一個圖片
+            Image(
+                painter = painterResource(id = R.drawable.animal1),
+                contentDescription = "animal1 icon",
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+                    .background(Color.LightGray),
+                alpha = 0.6f
+            )
+
+            Spacer(modifier = Modifier.width(20.dp))
+
+            // 第二個圖片
+            Image(
+                painter = painterResource(id = R.drawable.animal2),
+                contentDescription = "animal2 icon",
+                modifier = Modifier.size(100.dp)
+            )
+
+            Spacer(modifier = Modifier.width(20.dp))
+
+            // 第三個圖片
+            Image(
+                painter = painterResource(id = R.drawable.animal0),
+                contentDescription = "animal0 icon",
+                modifier = Modifier.size(100.dp)
+            )
+    }
+
+    }
+}
