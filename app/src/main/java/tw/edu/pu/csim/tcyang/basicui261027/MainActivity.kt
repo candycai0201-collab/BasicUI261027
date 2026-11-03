@@ -25,6 +25,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -193,19 +195,30 @@ fun LazyRowExample(modifier: Modifier = Modifier) {
     ) {
         // 直接傳入 animals 清單，每個迴圈拿到一個 animal 物件
         itemsIndexed(animals) { index,animal ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Image(
-                    painter = painterResource(id = animal.imageRes),
-                    contentDescription = animal.name,
-                    modifier = Modifier.size(150.dp)
+            Card(
+                modifier = Modifier.fillParentMaxWidth(0.5f)
+                    .height(260.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFD0BCFF)
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "$index${animal.name}"
-                )
+            ){
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Image(
+                        painter = painterResource(id = animal.imageRes),
+                        contentDescription = animal.name,
+                        modifier = Modifier.size(150.dp)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "$index${animal.name}"
+                    )
+                }
             }
+
+
         }}}
