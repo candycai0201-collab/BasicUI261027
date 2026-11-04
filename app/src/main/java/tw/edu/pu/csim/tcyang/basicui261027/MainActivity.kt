@@ -6,12 +6,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.DrawableRes
+import androidx.annotation.RawRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,18 +24,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +47,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.common.MediaItem
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
 import tw.edu.pu.csim.tcyang.basicui261027.ui.theme.BasicUI261027Theme
 
 class MainActivity : ComponentActivity() {
@@ -67,10 +73,34 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Main(modifier: Modifier = Modifier) {
-    Box {
+    // 建立影片狀態變數
+    var currentVideoRes by remember { mutableStateOf(R.raw.love) }
+
+    Column(modifier = modifier.fillMaxSize()) {
+        // 1. 影片播放器
+        SimpleVideoPlayer(videoRes = currentVideoRes)
+
+        // 2. 空間與切換按鍵（塞在中間）
+        Spacer(modifier = Modifier.height(12.dp))
+        Button(
+            onClick = {
+                currentVideoRes = if (currentVideoRes == R.raw.love) {
+                    R.raw.handpan
+                } else {
+                    R.raw.love
+                }
+            },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text(text = if (currentVideoRes == R.raw.love) "切換handpan影片" else "切換love影片")
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // 3. 下方的卡片與其他元件
+        LazyRowExample()
+        ColumnExample()
+        TextFieldExample()
         LazyColumnExample()
-        ColumnExample(modifier)
-        LazyRowExample(modifier)
     }
 }
 
@@ -128,7 +158,7 @@ fun ColumnExample(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun RowExample() {
+fun RowExample(modifier: Modifier = Modifier) {
     Row {
         Image(
             painter = painterResource(id = R.drawable.android),
@@ -240,3 +270,115 @@ fun LazyRowExample(modifier: Modifier = Modifier) {
 
 
         }}}
+
+@Composable
+fun SimpleVideoPlayer(@RawRes videoRes: Int) {
+    val context = LocalContext.current
+    val exoPlayer = remember { ExoPlayer.Builder(context).build() }
+
+    LaunchedEffect(videoRes) {
+        val uri = "android.resource://${context.packageName}/$videoRes"
+        exoPlayer.setMediaItem(MediaItem.fromUri(android.net.Uri.parse(uri)))
+        exoPlayer.prepare()
+        exoPlayer.playWhenReady = true
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { exoPlayer.release() }
+    }
+
+    AndroidView(
+        factory = { ctx -> PlayerView(ctx).apply { player = exoPlayer } },
+        modifier = Modifier.fillMaxWidth().height(200.dp)
+    )
+}
+
+@Composable
+fun SimpleVideo1Player() {
+        val context = LocalContext.current
+        val exoPlayer = remember { ExoPlayer.Builder(context).build() }
+
+    val videoRes = null
+    LaunchedEffect(videoRes) {
+            val uri = "android.resource://${context.packageName}/$videoRes"
+            exoPlayer.setMediaItem(MediaItem.fromUri(android.net.Uri.parse(uri)))
+            exoPlayer.prepare()
+            exoPlayer.playWhenReady = true
+        }
+
+        DisposableEffect(Unit) {
+            onDispose { exoPlayer.release() }
+        }
+
+        AndroidView(
+            factory = { ctx -> PlayerView(ctx).apply { player = exoPlayer } },
+            modifier = Modifier.fillMaxWidth().height(200.dp)
+        )
+    }
+
+@Composable
+fun SimpleVideoPlayer() {
+    val context = LocalContext.current
+
+    // 建立並記住 ExoPlayer 實體，設定影片路徑與自動播放
+    // 1. 使用 remember 儲存目前正在播放的影片資源 ID
+    // 假設您的兩個影片分別是 R.raw.love 和 R.raw.another_video
+    var currentVideoRes by remember { mutableStateOf(R.raw.love) }
+
+    // 2. 建立並記住 ExoPlayer 實例
+        val exoPlayer = remember {
+            ExoPlayer.Builder(context).build()
+        }
+
+        // 當 currentVideoRes 改變時，這個 LaunchedEffect 會自動重新觸發，讓播放器載入新影片
+        LaunchedEffect(currentVideoRes) {
+            val uri = "android.resource://${context.packageName}/$currentVideoRes"
+            exoPlayer.setMediaItem(MediaItem.fromUri(android.net.Uri.parse(uri)))
+            exoPlayer.prepare()
+            exoPlayer.playWhenReady = true // 載入完成自動播放
+        }
+
+        // 當組件銷毀時，釋放播放器資源
+        DisposableEffect(Unit) {
+            onDispose {
+                exoPlayer.release()
+            }
+        }
+
+        // 4. 使用 Column 排版，將按鈕與影片播放器放在一起
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {// 內嵌的原生 PlayerView
+            AndroidView(
+                factory = { ctx ->
+                    PlayerView(ctx).apply {
+                        player = exoPlayer
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 5. 切換影片的按鈕
+            Button(
+                onClick = {
+                    // 如果目前是 love，就換成另一個影片；反之亦然
+                    currentVideoRes = if (currentVideoRes == R.raw.love) {
+                        R.raw.handpan
+                    } else {
+                        R.raw.love
+                    }
+                }
+
+            ) {
+                // 動態顯示按鈕文字
+                Text(
+                    text = if (currentVideoRes == R.raw.love) "切換handpan影片" else "切換love影片"
+                )
+            }
+        }
+    }
